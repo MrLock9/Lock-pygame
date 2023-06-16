@@ -63,7 +63,7 @@ while county <= 4:
         target_rect = target_surf.get_rect()
         x_location = offset * county + brick_width * countx
         y_location = offset + offset * countx + brick_height * county
-        
+
 #         target_rect.x = x_location
 #         target_rect.y = y_location
 #         target_surf.fill(target_color)
@@ -99,6 +99,7 @@ while run:
 
     # controls the horizontal movement of the player, change vel value outside of the loop for faster controlling
     rect.x += (keys[pygame.K_RIGHT] - keys[pygame.K_LEFT]) * player_vel
+    rect.y += (keys[pygame.K_DOWN] - keys[pygame.K_UP]) * player_vel
 
     rect.centerx = rect.centerx % window.get_width()
     rect.centery = rect.centery % window.get_height()
@@ -107,8 +108,6 @@ while run:
     pygame.draw.rect(window, (220, 30, 250), brick)
     pygame.draw.rect(window, (255, 90, 0), rect)
     pygame.display.flip()
-
-
 
 pygame.quit()
 exit()
