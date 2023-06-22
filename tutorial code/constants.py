@@ -1,131 +1,100 @@
-import math
-import pygame
-
-# Define some colors
-black = (0, 0, 0)
-white = (255, 255, 255)
-blue = (0, 0, 255)
-
-# Size of break-out blocks
-block_width = 23
-block_height = 15
-
-class Block(pygame.sprite.Sprite):
-    def __init__(self, color, x, y):
-        super().__init__()
-        self.image = pygame.Surface([block_width, block_height])
-        self.image.fill(color)
-        self.rect = self.image.get_rect()
-        self.rect.x = x
-        self.rect.y = y
-
-class Ball(pygame.sprite.Sprite):
-    speed = 10.0
-    x = 0.0
-    y = 180.0
-    direction = 200
-    width = 10
-    height = 10
-
-    def __init__(self):
-        super().__init__()
-        self.image = pygame.Surface([self.width, self.height])
-        self.image.fill(white)
-        self.rect = self.image.get_rect()
-        self.screenheight = pygame.display.get_surface().get_height()
-        self.screenwidth = pygame.display.get_surface().get_width()
-
-    def bounce(self, diff):
-        self.direction = (180 - self.direction) % 360
-        self.direction -= diff
-
-    def update(self):
-        direction_radians = math.radians(self.direction)
-        self.x += self.speed * math.sin(direction_radians)
-        self.y -= self.speed * math.cos(direction_radians)
-        self.rect.x = self.x
-        self.rect.y = self.y
-
-        if self.y <= 0:
-            self.bounce(0)
-            self.y = 1
-
-        if self.x <= 0:
-            self.direction = (360 - self.direction) % 360
-            self.x = 1
-
-        if self.x > self.screenwidth - self.width:
-            self.direction = (360 - self.direction) % 360
-            self.x = self.screenwidth - self.width - 1
-
-        if self.y > 600:
-            return True
-        else:
-            return False
-
-class Player(pygame.sprite.Sprite):
-    def __init__(self):
-        super().__init__()
-        self.width = 75
-        self.height = 15
-        self.image = pygame.Surface([self.width, self.height])
-        self.image.fill(white)
-        self.rect = self.image.get_rect()
-        self.screenheight = pygame.display.get_surface().get_height()
-        self.screenwidth = pygame.display.get_surface().get_width()
-        self.rect.x = 0
-        self.rect.y = self.screenheight - self.height
-
-    def update(self):
-        pos = pygame.mouse.get_pos()
-        self.rect.x = pos[0]
-        if self.rect.x > self.screenwidth - self.width:
-            self.rect.x = self.screenwidth - self.width
-
+import pygame, sys
 pygame.init()
-screen = pygame.display.set_mode([800, 600])
-pygame.display.set_caption('Breakout')
-pygame.mouse.set_visible(0)
-font = pygame.font.Font(None, 36)
-background = pygame.Surface(screen.get_size())
-blocks = pygame.sprite.Group()
-balls = pygame.sprite.Group()
-allsprites = pygame.sprite.Group()
-player = Player()
-allsprites.add(player)
-ball = Ball()
-allsprites.add(ball)
-balls.add(ball)
-top = 80
-blockcount = 32
+screen = pygame.display.set_mode([640,480])
+black = [0, 0, 0]
+ball_radius = 10
+ball_color = [222,50,50]
+ball_speed_x = 3
+ball_speed_y = 5
+ball_y = 100
+ball_x = 100
+paddle_width = 60
+paddle_height = 20
+paddle_color = [20,180,180]
+paddle_speed = 10
+class Brick(pygame.sprite.Sprite):
+    image = None
 
-for row in range(5):
-    for column in range(0, blockcount):
-        block = Block(blue, column * (block_width + 2) + 1, top)
-        blocks.add(block)
-        allsprites.add(block)
-    top += block_height + 2
+    def __init__(self, x, y):
+        pygame.sprite.Sprite.__init__(self)
+        
+        if Brick.image is None:
+            # This is the first time this class has been instantiated. So, load the image
+            Brick.image = pygame.image.load("graphics/download.jpg")
+        self.image = Brick.image
 
-clock = pygame.time.Clock()
-game_over = False
-exit_program = False
+        # Make our top-left corner the passed-in location.
+        self.rect = self.image.get_rect()
+        self.x = x
+        self.y = y
+        self.rect.topleft = (self.x, self.y)
+brick_array = []
+for i in range(1,8):
+    brick1 = Brick(75*i,50)
+    brick_array.append(brick1)
+running = True
+while running:
+    for event in pygame.event.get():
+        # Check if you've exited the game
+        if event.type == pygame.QUIT:
+            running = False
 
-while not exit_program:
-    clock.tick(30)
+        if event.type == pygame.MOUSEMOTION:
+            # Move the paddle based on mouse movement
+            coordinates = pygame.mouse.get_pos()
+            paddle_x = coordinates[0] - paddle_width/2
+            paddle_y = coordinates[0] - paddle_height/2
+            if paddle_x < 0:
+                paddle_x = 0
+            if paddle_x > screen.get_width() - paddle_width:
+                paddle_x = screen.get_width() - paddle_width
+    # Move the ball
+    ball_y = ball_y + ball_speed_y
+    ball_x = ball_x + ball_speed_x
+    
+    # Check if the ball is off the bottom of the screen
+    if ball_y > screen.get_height() - ball_radius:
+        ball_speed_y = -ball_speed_y
+    
+    # Check if the ball hit the top of the screen
+    if ball_y < ball_radius:
+        ball_speed_y = -ball_speed_y
+    
+    # Check if the ball hit the left side of the screen
+    if ball_x < ball_radius:
+        ball_speed_x = -ball_speed_x
+    
+    # Check if the ball hit the right side of the screen
+    if ball_x > screen.get_width() - ball_radius:
+        ball_speed_x = -ball_speed_x
+
+    # Create imaginary rectangles around ball and paddle
+    ball_rect = pygame.Rect(ball_x-ball_radius, ball_y-ball_radius, ball_radius*2,ball_radius*2)
+    paddle_rect = pygame.Rect(paddle_x, paddle_y, paddle_width, paddle_height)
+    
+    # Check for collisions with bricks
+    for brick in brick_array:
+        if brick.rect.colliderect(ball_rect):
+            score = score + 1
+            brick_array.remove(brick)
+            ball_speed_y = - ball_speed_y
+    
+    # Check for collision with paddle
+    if ball_rect.colliderect(paddle_rect):
+        ball_speed_y = -ball_speed_y
+    # Clear the screen
     screen.fill(black)
 
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            exit_program = True
-
-    if not game_over:
-        player.update()
-        game_over = ball.update()
-
-    if game_over:
-        text = font.render("Game Over", True, white)
-        textpos = text.get_rect(centerx=background.get_width()/2)
-        textpos.top = 300
-        screen.blit(text, textpos)
-
-    if pygame.sprite```
+    # Draw the bricks
+    for brick in brick_array:
+        screen.blit(brick.image, brick.rect)
+    
+    # Draw the ball
+    pygame.draw.circle(screen, ball_color, [int(ball_x), int(ball_y)], ball_radius, 0)
+    
+    # Draw the paddle
+    pygame.draw.rect(screen, paddle_color, [paddle_x, paddle_y, paddle_width, paddle_height], 0)
+    
+    # Update the display
+    pygame.display.update()
+pygame.quit()
