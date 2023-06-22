@@ -1,0 +1,5 @@
+Bibliography:
+https://www.geeksforgeeks.org/pygame-creating-sprites/
+https://github.com/aknuck/Atari-Breakout/blob/master/breakout.py
+The pygame documentation - https://devdocs.io/pygame/
+https://github.com/Rabbid76/PyGameExamplesAndAnswers/blob/master/documentation/pygame/pygame_keys_and_keyboard_event.md
